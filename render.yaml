@@ -1,0 +1,39 @@
+databases:
+  - name: youtube_clone_db
+    databaseName: youtube_clone_db
+    user: youtube_clone_user
+
+services:
+  # Django Backend
+  - type: web
+    name: youtube-clone-backend
+    runtime: python
+    buildCommand: "./backend/build.sh"
+    startCommand: "cd backend && gunicorn config.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: youtube_clone_db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DJANGO_SETTINGS_MODULE
+        value: config.settings
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+
+  # React Frontend
+  - type: web
+    name: youtube-clone-frontend
+    runtime: node
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/build
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: REACT_APP_API_URL
+        sync: false
